@@ -1,0 +1,136 @@
+::-webkit-scrollbar{
+  display: none;
+}
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background-color: #3d3846;
+  color: #ddd;
+}
+
+.todos-container{
+  width: 60vw;
+  margin: 10px auto;
+
+}
+.item{
+  background-color: #242424;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow-x: hidden;
+  transition: all .2s ease;
+}
+.top{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.top .title, .top .due-date{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.icon{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 15px;
+  height: 15px;
+  background-color: #656565;
+  margin: 8px;
+  cursor: pointer;
+}
+.icon:first-child{
+  background-color: transparent;
+  margin-right: 4px;
+}
+.icon:last-child{
+  background-color: transparent;
+  width: 25px;
+  height: 25px;
+}
+hr{
+  color: #656565;
+  margin: 2px 4px;
+  transition: opacity 0.3s ease-in;
+}
+
+.body{
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+  transition: all 2s ease-in;
+}
+.notes-container, .date-container{
+  padding: 2px 8px;
+}
+.notes-container p, .date-container p{
+  margin: 4px;
+}
+.notes-container textarea{
+  background-color: transparent;
+  border: 1px solid grey;
+  outline: none;
+  width: 100%;
+  color: #ddd;
+  padding: 6px;
+}
+.date-container{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 80%;
+}
+.date-container .dates{
+  width: 100%;
+}
+.date-container .date-item{
+  width: 100%;
+}
+.date-container input, .date-container select, .title input{
+  border: none;
+  outline: none;
+  padding: 4px;
+  margin: 5px auto;
+  border-radius: 4px;
+  background-color: #747474;
+  color: #ddd;
+}
+ .date-container select{
+  width: 100%;
+ }
+  .date-container input{
+  width: 97%;
+ }
+
+.date-container .footer{
+  align-self: flex-end;
+}
+.date-container .footer button{
+  border: none;
+  outline: none;
+  padding: 4px 10px;
+  background-color: #ed5f5d;
+  color: #ddd;
+  font-size: 15px;
+  border-radius: 5px;
+}
+
+.date-container .footer button:first-child{
+   background-color: royalblue;
+   margin-right: 5px;
+}
+
+/* create todo styling */
+.title input{
+  background-color: transparent;
+  color: #ddd;
+  font-size: 16px;
+}
+
+#caret{
+  transition: transform .2s ease-in;
+}
