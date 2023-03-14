@@ -59,7 +59,7 @@ const CreateTodo = () => {
             <PlusOutlined />
           </div>
           <input
-          ref={inputRef}
+            ref={inputRef}
             type="text"
             name="title"
             id="new"
