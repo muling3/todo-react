@@ -10,6 +10,9 @@ migrate-up:
 create-migration:
 	migrate create -ext sql -dir ./backend/db/migration -seq init_schema
 
+generate: 
+	cd backend && sqlc generate
+
 start-db:
 	docker start database-mysql
 
@@ -19,4 +22,4 @@ backend:
 frontend:
 	npm run start
 
-.PHONY: migrate-drop migrate-down migrate-up create-migration start-db frontend backend
+.PHONY: migrate-drop migrate-down migrate-up create-migration generate start-db frontend backend

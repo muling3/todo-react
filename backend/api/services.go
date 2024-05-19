@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -10,10 +11,11 @@ import (
 )
 
 type todoRequest struct {
-	Title    string `json:"title" binding:"required"`
-	Body     string `json:"body" binding:"required"`
-	Due      int    `json:"due" binding:"required"`
-	Priority string `json:"priority" binding:"required,oneof=LOW HIGH MEDIUM"`
+	UserID   sql.NullInt32 `json:"user_id" binding:"required"`
+	Title    string        `json:"title" binding:"required"`
+	Body     string        `json:"body" binding:"required"`
+	Due      int           `json:"due" binding:"required"`
+	Priority string        `json:"priority" binding:"required,oneof=LOW HIGH MEDIUM"`
 }
 
 // creating a single todo
@@ -33,6 +35,7 @@ func (s *Server) CreateTodo(ctx *gin.Context) {
 	}
 
 	args := db.CreateTodoParams{
+		UserID:   request.UserID,
 		Title:    request.Title,
 		Body:     request.Body,
 		Priority: request.Priority,
@@ -104,7 +107,7 @@ func (s *Server) UpdateToDo(ctx *gin.Context) {
 	args := db.UpdateTodoParams{
 		Body:     request.Body,
 		Priority: request.Priority,
-		ID: int32(idReq.Id),
+		ID:       int32(idReq.Id),
 	}
 
 	err := s.queries.UpdateTodo(ctx, args)
@@ -125,6 +128,142 @@ func (s *Server) DeleteTodo(ctx *gin.Context) {
 	}
 
 	err := s.queries.DeleteTodo(ctx, int32(getRequest.Id))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, "Success")
+}
+
+type userRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// creating a single user
+func (s *Server) CreateUser(ctx *gin.Context) {
+	var request userRequest
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	args := db.CreateUserParams{
+		Username: request.Username,
+		Password: request.Password,
+	}
+
+	if err := s.queries.CreateUser(ctx, args); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, "Success")
+}
+
+// getting a single user
+func (s *Server) GetUser(ctx *gin.Context) {
+	var getRequest idRequest
+	if err := ctx.Copy().ShouldBindUri(&getRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := s.queries.GetUser(ctx, int32(getRequest.Id))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user)
+}
+
+// getting  all  users
+func (s *Server) GetUsers(ctx *gin.Context) {
+	users, err := s.queries.ListUsers(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, users)
+}
+
+type userUpdateRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// login user
+func (s *Server) LoginUser(ctx *gin.Context) {
+	var idReq idRequest
+	var request userUpdateRequest
+
+	if err := ctx.Copy().ShouldBindUri(&idReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	args := db.LoginUserParams{
+		Username: request.Username,
+		Password: request.Password,
+	}
+
+	user, err := s.queries.LoginUser(ctx, args)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Printf("USER LOGGED IN " + user.Username)
+
+	ctx.JSON(http.StatusOK, "Login Succesful")
+}
+
+// updating a user
+func (s *Server) UpdateUser(ctx *gin.Context) {
+	var idReq idRequest
+	var request userUpdateRequest
+
+	if err := ctx.Copy().ShouldBindUri(&idReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	args := db.UpdateUserParams{
+		Username: request.Username,
+		Password: request.Password,
+		ID:       int32(idReq.Id),
+	}
+
+	err := s.queries.UpdateUser(ctx, args)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, "Success")
+}
+
+// delete user
+func (s *Server) DeleteUser(ctx *gin.Context) {
+	var getRequest idRequest
+	if err := ctx.Copy().ShouldBindUri(&getRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := s.queries.DeleteUser(ctx, int32(getRequest.Id))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

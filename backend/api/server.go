@@ -19,11 +19,24 @@ func NewServer(q *db.Queries) *Server {
 	config.AllowAllOrigins = true
 	router.Use(cors.New(config))
 
-	router.GET("/", server.GetToDoes)
-	router.GET("/:id", server.GetToDo)
-	router.POST("/", server.CreateTodo)
-	router.PUT("/:id", server.UpdateToDo)
-	router.DELETE("/:id", server.DeleteTodo)
+	// todos
+	todos := router.Group("/todos")
+
+	todos.GET("/", server.GetToDoes)
+	todos.GET("/:id", server.GetToDo)
+	todos.POST("/", server.CreateTodo)
+	todos.PUT("/:id", server.UpdateToDo)
+	todos.DELETE("/:id", server.DeleteTodo)
+
+	// users
+	users := router.Group("/users")
+
+	users.GET("/", server.GetUsers)
+	users.GET("/:id", server.GetUser)
+	users.POST("/", server.CreateUser)
+	users.POST("/login", server.LoginUser)
+	users.PUT("/:id", server.UpdateUser)
+	users.DELETE("/:id", server.DeleteUser)
 
 	server.router = router
 

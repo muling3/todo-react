@@ -8,9 +8,9 @@ ORDER BY id;
 
 -- name: CreateTodo :exec
 INSERT INTO todos (
-  title, body, priority, due_date
+  user_id, title, body, priority, due_date
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?, ?, ?
 );
 
 -- name: UpdateTodo :exec
