@@ -11,11 +11,11 @@ import (
 )
 
 type todoRequest struct {
-	UserID   sql.NullInt32 `json:"user_id" binding:"required"`
-	Title    string        `json:"title" binding:"required"`
-	Body     string        `json:"body" binding:"required"`
-	Due      int           `json:"due" binding:"required"`
-	Priority string        `json:"priority" binding:"required,oneof=LOW HIGH MEDIUM"`
+	UserID   int32  `json:"user_id" binding:"required"`
+	Title    string `json:"title" binding:"required"`
+	Body     string `json:"body" binding:"required"`
+	Due      int    `json:"due" binding:"required"`
+	Priority string `json:"priority" binding:"required,oneof=LOW HIGH MEDIUM"`
 }
 
 // creating a single todo
@@ -34,8 +34,20 @@ func (s *Server) CreateTodo(ctx *gin.Context) {
 		dueDate = time.Now().AddDate(0, 0, request.Due)
 	}
 
+	// confirm the user exists
+	user, err := s.queries.GetUser(ctx, request.UserID)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Println("USER FOUND " + string(user.ID))
+
 	args := db.CreateTodoParams{
-		UserID:   request.UserID,
+		UserID: sql.NullInt32{
+			Int32: user.ID,
+		},
 		Title:    request.Title,
 		Body:     request.Body,
 		Priority: request.Priority,

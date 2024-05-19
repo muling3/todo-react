@@ -12,7 +12,7 @@ import (
 var testQueries *Queries
 
 func TestMain(m *testing.M) {
-	DB, err := sql.Open("mysql", "root:password@/todo_db?parseTime=true")
+	DB, err := sql.Open("mysql", "root:password@/todo?parseTime=true")
 	if err != nil {
 		log.Println(err.Error())
 	}
