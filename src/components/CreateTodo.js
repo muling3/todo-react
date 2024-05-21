@@ -1,20 +1,19 @@
-
 import axios from "axios";
 import { differenceInCalendarDays, sub } from "date-fns";
 import { format, add } from "date-fns/esm";
-import React, { useRef, useState } from "react";  
+import React, { useRef, useState } from "react";
 
 //icons
-import { CaretDownOutlined, PlusOutlined } from '@ant-design/icons'
+import { CaretDownOutlined, PlusOutlined } from "@ant-design/icons";
 
 const CreateTodo = () => {
   const inputRef = useRef();
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    body: '',
-    due_date: '',
-    priority: ''
+    title: "",
+    body: "",
+    due_date: "",
+    priority: "",
   });
 
   const handleExpandTodo = (e) => {
@@ -23,7 +22,7 @@ const CreateTodo = () => {
 
   const handleEndEditing = (e) => {
     if (e.key === "Enter") {
-      setOpen(true)
+      setOpen(true);
     }
   };
 
@@ -34,7 +33,7 @@ const CreateTodo = () => {
     }));
   };
 
-  const handleSaveTodo = async() => {
+  const handleSaveTodo = async () => {
     let dateDiff = differenceInCalendarDays(
       new Date(formData.due_date),
       new Date()
@@ -46,9 +45,9 @@ const CreateTodo = () => {
       priority: formData.priority ? formData.priority : "LOW",
     };
 
-    let res = await axios.post("http://localhost:9090", tosendData);
-    setOpen(prev => !prev)
-    window.location.reload(true)
+    let res = await axios.post("http://localhost:9090/todos/", tosendData);
+    setOpen((prev) => !prev);
+    window.location.reload(true);
   };
 
   return (
@@ -70,7 +69,12 @@ const CreateTodo = () => {
           />
         </div>
         <div className="due-date">
-          <div className="icon" onClick={handleExpandTodo} id="caret" style={{ transform: open ? "rotate(-180deg)" : "rotate(0deg)"}}>
+          <div
+            className="icon"
+            onClick={handleExpandTodo}
+            id="caret"
+            style={{ transform: open ? "rotate(-180deg)" : "rotate(0deg)" }}
+          >
             <CaretDownOutlined />
           </div>
         </div>

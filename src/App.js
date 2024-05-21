@@ -6,15 +6,30 @@ import TodoItem from "./components/TodoItem";
 import "./index.css";
 import "react-calendar/dist/Calendar.css";
 import CreateTodo from "./components/CreateTodo";
-import Login from "./Login";
-import Signup from "./Signup";
+import { redirect, useNavigate } from "react-router-dom";
 
 const App = () => {
   const [todos, setTodos] = useState();
   const fetchTodos = async () => {
-    let res = await axios.get("http://localhost:9090");
+    let res = await axios.get("http://localhost:9090/todos/");
     setTodos(res.data);
   };
+  const [user, setUser] = useState();
+  const navigate = useNavigate();
+
+  // get logged in user
+  const checkLoggedInUser = () => {
+    const user = localStorage.getItem("todos-username");
+    console.log(" username got is " + user);
+    if (!user) {
+      navigate("/login");
+    }
+    setUser(user);
+  };
+
+  useEffect(() => {
+    checkLoggedInUser();
+  }, []);
 
   useEffect(() => {
     fetchTodos();
@@ -22,11 +37,11 @@ const App = () => {
 
   const onDelete = async (id) => {
     window.location.reload(true);
-    await axios.delete(`http://localhost:9090/${id}`);
+    await axios.delete(`http://localhost:9090/todos/${id}`);
   };
 
   const onUpdate = async (id, data) => {
-    await axios.put(`http://localhost:9090/${id}`, data);
+    await axios.put(`http://localhost:9090/todos/${id}`, data);
   };
 
   return (

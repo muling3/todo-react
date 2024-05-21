@@ -210,13 +210,8 @@ type userUpdateRequest struct {
 
 // login user
 func (s *Server) LoginUser(ctx *gin.Context) {
-	var idReq idRequest
 	var request userUpdateRequest
 
-	if err := ctx.Copy().ShouldBindUri(&idReq); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
