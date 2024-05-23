@@ -2,12 +2,15 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/muling3/go-todos-api/db/sqlc"
+	"github.com/o1egl/paseto"
 )
 
 type todoRequest struct {
@@ -228,9 +231,38 @@ func (s *Server) LoginUser(ctx *gin.Context) {
 		return
 	}
 
+	// create the token
+	symmetricKey := []byte("YELLOW SUBMARINE, BLACK WIZARDRY") // Must be 32 bytes
+	now := time.Now()
+	exp := now.Add(24 * time.Hour)
+	nbt := now
+
+	jsonToken := paseto.JSONToken{
+		Audience:   "todo-frontend",
+		Issuer:     "todo.api",
+		Jti:        fmt.Sprintf("%s, %v ", args.Username, rand.Intn(20)),
+		Subject:    args.Username,
+		IssuedAt:   now,
+		Expiration: exp,
+		NotBefore:  nbt,
+	}
+	// Add custom claim    to the token
+	jsonToken.Set("data", "this is a signed message")
+	footer := "some footer"
+
+	// Encrypt data
+	token, err := paseto.NewV2().Encrypt(symmetricKey, jsonToken, footer)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// token = "v2.local.E42A2iMY9SaZVzt-WkCi45_aebky4vbSUJsfG45OcanamwXwieieMjSjUkgsyZzlbYt82miN1xD-X0zEIhLK_RhWUPLZc9nC0shmkkkHS5Exj2zTpdNWhrC5KJRyUrI0cupc5qrctuREFLAvdCgwZBjh1QSgBX74V631fzl1IErGBgnt2LV1aij5W3hw9cXv4gtm_jSwsfee9HZcCE0sgUgAvklJCDO__8v_fTY7i_Regp5ZPa7h0X0m3yf0n4OXY9PRplunUpD9uEsXJ_MTF5gSFR3qE29eCHbJtRt0FFl81x-GCsQ9H9701TzEjGehCC6Bhw.c29tZSBmb290ZXI"
+
+	log.Print("token gen " + token)
+
 	log.Printf("USER LOGGED IN " + user.Username)
 
-	ctx.JSON(http.StatusOK, "Login Succesful")
+	ctx.JSON(http.StatusOK, token)
 }
 
 // updating a user

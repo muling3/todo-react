@@ -11,7 +11,11 @@ import { redirect, useNavigate } from "react-router-dom";
 const App = () => {
   const [todos, setTodos] = useState();
   const fetchTodos = async () => {
-    let res = await axios.get("http://localhost:9090/todos/");
+    let res = await axios.get("http://localhost:9090/todos/", {
+      headers: {
+        Authorization: "Bearer " + "some token goes here",
+      },
+    });
     setTodos(res.data);
   };
   const [user, setUser] = useState();
