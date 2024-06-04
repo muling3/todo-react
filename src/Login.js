@@ -34,7 +34,9 @@ function Login() {
 
     console.log("LOGIN RESPONSE ", res);
 
-    localStorage.setItem("todos-username", tosendData.username); // will be removed
+    localStorage.setItem("todos-username", res.data.username); // will be removed
+
+    localStorage.setItem("todos-token", res.data.token); // will be removed
 
     // TODO: save the user details in cookie session
 

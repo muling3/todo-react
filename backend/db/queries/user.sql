@@ -6,6 +6,10 @@ WHERE id = ? LIMIT 1;
 SELECT * FROM users
 WHERE username = ? AND password = ? LIMIT 1;
 
+-- name: GetUserByUsername :one
+SELECT * FROM users
+WHERE username = ? LIMIT 1;
+
 -- name: ListUsers :many
 SELECT * FROM users
 ORDER BY id;

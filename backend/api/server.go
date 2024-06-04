@@ -24,7 +24,7 @@ func NewServer(q *db.Queries) *Server {
 	router.Use(cors.New(CORSConfig()))
 
 	// authentication middleware
-	router.Use(AuthTokenMiddleware())
+	// router.Use(AuthTokenMiddleware())
 
 	router.Use(func(c *gin.Context) {
 		log.Printf("Incoming request: %s %s", c.Request.Method, c.Request.URL.Path)
@@ -36,7 +36,7 @@ func NewServer(q *db.Queries) *Server {
 	users := router.Group("/users")
 	{
 		users.GET("/", AuthTokenMiddleware(), server.GetUsers)
-		users.GET("/:id", server.GetUser)
+		users.GET("/:id", AuthTokenMiddleware(), server.GetUser)
 		users.POST("/", server.CreateUser)
 		users.POST("/login", server.LoginUser)
 		users.PUT("/:id", AuthTokenMiddleware(), server.UpdateUser)
@@ -86,9 +86,13 @@ func AuthTokenMiddleware() gin.HandlerFunc {
 
 		if err != nil {
 			// throw unauthorised exception
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			log.Println("Error verifyng token " + err.Error())
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
+
+		// add the user id in the request
+		ctx.Set("Username", newJsonToken.Subject)
 
 		ctx.Next()
 	}

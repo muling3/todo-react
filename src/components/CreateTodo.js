@@ -45,7 +45,12 @@ const CreateTodo = () => {
       priority: formData.priority ? formData.priority : "LOW",
     };
 
-    let res = await axios.post("http://localhost:9090/todos/", tosendData);
+    let res = await axios.post("http://localhost:9090/todos/", tosendData, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("todos-token"),
+      },
+    });
+
     setOpen((prev) => !prev);
     window.location.reload(true);
   };

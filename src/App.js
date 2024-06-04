@@ -10,14 +10,6 @@ import { redirect, useNavigate } from "react-router-dom";
 
 const App = () => {
   const [todos, setTodos] = useState();
-  const fetchTodos = async () => {
-    let res = await axios.get("http://localhost:9090/todos/", {
-      headers: {
-        Authorization: "Bearer " + "some token goes here",
-      },
-    });
-    setTodos(res.data);
-  };
   const [user, setUser] = useState();
   const navigate = useNavigate();
 
@@ -31,6 +23,15 @@ const App = () => {
     setUser(user);
   };
 
+  const fetchTodos = async () => {
+    let res = await axios.get("http://localhost:9090/todos/", {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("todos-token"),
+      },
+    });
+    setTodos(res.data);
+  };
+
   useEffect(() => {
     checkLoggedInUser();
   }, []);
@@ -41,11 +42,19 @@ const App = () => {
 
   const onDelete = async (id) => {
     window.location.reload(true);
-    await axios.delete(`http://localhost:9090/todos/${id}`);
+    await axios.delete(`http://localhost:9090/todos/${id}`, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("todos-token"),
+      },
+    });
   };
 
   const onUpdate = async (id, data) => {
-    await axios.put(`http://localhost:9090/todos/${id}`, data);
+    await axios.put(`http://localhost:9090/todos/${id}`, data, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("todos-token"),
+      },
+    });
   };
 
   return (

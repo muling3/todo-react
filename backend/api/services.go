@@ -14,7 +14,6 @@ import (
 )
 
 type todoRequest struct {
-	UserID   int32  `json:"user_id" binding:"required"`
 	Title    string `json:"title" binding:"required"`
 	Body     string `json:"body" binding:"required"`
 	Due      int    `json:"due" binding:"required"`
@@ -37,9 +36,15 @@ func (s *Server) CreateTodo(ctx *gin.Context) {
 		dueDate = time.Now().AddDate(0, 0, request.Due)
 	}
 
-	// confirm the user exists
-	user, err := s.queries.GetUser(ctx, request.UserID)
+	// get set username
+	username, exists := ctx.Get("Username")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unathorized"})
+		return
+	}
 
+	// get the user
+	user, err := s.queries.GetUserByUsername(ctx, username.(string))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -80,7 +85,28 @@ func (s *Server) GetToDo(ctx *gin.Context) {
 		return
 	}
 
-	todo, err := s.queries.GetTodo(ctx, int32(getRequest.Id))
+	// get set username
+	username, exists := ctx.Get("Username")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unathorized"})
+		return
+	}
+
+	// get the user
+	user, err := s.queries.GetUserByUsername(ctx, username.(string))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	args := db.GetUuserTodoParams{
+		UserID: sql.NullInt32{
+			Int32: int32(user.ID),
+		},
+		ID: int32(getRequest.Id),
+	}
+
+	todo, err := s.queries.GetUuserTodo(ctx, args)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -91,7 +117,21 @@ func (s *Server) GetToDo(ctx *gin.Context) {
 
 // getting  all  todoes
 func (s *Server) GetToDoes(ctx *gin.Context) {
-	todoes, err := s.queries.ListTodos(ctx)
+	// get set username
+	username, exists := ctx.Get("Username")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unathorized"})
+		return
+	}
+
+	// get the user
+	user, err := s.queries.GetUserByUsername(ctx, username.(string))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	todoes, err := s.queries.ListUserTodos(ctx, sql.NullInt32{Valid: true, Int32: int32(user.ID)})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -119,13 +159,28 @@ func (s *Server) UpdateToDo(ctx *gin.Context) {
 		return
 	}
 
-	args := db.UpdateTodoParams{
+	// get set username
+	username, exists := ctx.Get("Username")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unathorized"})
+		return
+	}
+
+	// get the user
+	user, err := s.queries.GetUserByUsername(ctx, username.(string))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	args := db.UpdateUserTodoParams{
 		Body:     request.Body,
 		Priority: request.Priority,
 		ID:       int32(idReq.Id),
+		UserID:   sql.NullInt32{Int32: int32(user.ID)},
 	}
 
-	err := s.queries.UpdateTodo(ctx, args)
+	err = s.queries.UpdateUserTodo(ctx, args)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -142,7 +197,25 @@ func (s *Server) DeleteTodo(ctx *gin.Context) {
 		return
 	}
 
-	err := s.queries.DeleteTodo(ctx, int32(getRequest.Id))
+	// get set username
+	username, exists := ctx.Get("Username")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unathorized"})
+		return
+	}
+
+	// get the user
+	user, err := s.queries.GetUserByUsername(ctx, username.(string))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	args := db.DeleteUserTodoParams{
+		UserID: sql.NullInt32{Int32: int32(user.ID)},
+	}
+
+	err = s.queries.DeleteUserTodo(ctx, args)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -256,13 +329,10 @@ func (s *Server) LoginUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	// token = "v2.local.E42A2iMY9SaZVzt-WkCi45_aebky4vbSUJsfG45OcanamwXwieieMjSjUkgsyZzlbYt82miN1xD-X0zEIhLK_RhWUPLZc9nC0shmkkkHS5Exj2zTpdNWhrC5KJRyUrI0cupc5qrctuREFLAvdCgwZBjh1QSgBX74V631fzl1IErGBgnt2LV1aij5W3hw9cXv4gtm_jSwsfee9HZcCE0sgUgAvklJCDO__8v_fTY7i_Regp5ZPa7h0X0m3yf0n4OXY9PRplunUpD9uEsXJ_MTF5gSFR3qE29eCHbJtRt0FFl81x-GCsQ9H9701TzEjGehCC6Bhw.c29tZSBmb290ZXI"
 
-	log.Print("token gen " + token)
+	log.Printf("\n\n USER LOGGED IN %v \n\n", user.Username)
 
-	log.Printf("USER LOGGED IN " + user.Username)
-
-	ctx.JSON(http.StatusOK, token)
+	ctx.JSON(http.StatusOK, gin.H{"token": token, "username": args.Username})
 }
 
 // updating a user
@@ -279,13 +349,27 @@ func (s *Server) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
+	// get set username
+	username, exists := ctx.Get("Username")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unathorized"})
+		return
+	}
+
+	// get the user
+	_, err := s.queries.GetUserByUsername(ctx, username.(string))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	args := db.UpdateUserParams{
 		Username: request.Username,
 		Password: request.Password,
 		ID:       int32(idReq.Id),
 	}
 
-	err := s.queries.UpdateUser(ctx, args)
+	err = s.queries.UpdateUser(ctx, args)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -302,7 +386,21 @@ func (s *Server) DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	err := s.queries.DeleteUser(ctx, int32(getRequest.Id))
+	// get set username
+	username, exists := ctx.Get("Username")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unathorized"})
+		return
+	}
+
+	// get the user
+	_, err := s.queries.GetUserByUsername(ctx, username.(string))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = s.queries.DeleteUser(ctx, int32(getRequest.Id))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
